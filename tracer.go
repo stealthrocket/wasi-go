@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"strconv"
 )
 
 // Trace wraps a System to log all calls to its methods in a human-readable
@@ -876,14 +878,22 @@ func (t *tracer) printAddressInfo(a AddressInfo) {
 	t.printf("}")
 }
 
-const maxBytes = 32
+var maxBytes = 32
+
+func init() {
+	if m := os.Getenv("TRACER_MAX_BYTES"); m != "" {
+		if i, err := strconv.Atoi(m); err == nil {
+			maxBytes = i
+		}
+	}
+}
 
 func (t *tracer) printBytes(b []byte) {
 	t.printf("[%d]byte(\"", len(b))
 
 	if len(b) > 0 {
 		trunc := b
-		if len(b) > maxBytes {
+		if maxBytes > 0 && len(b) > maxBytes {
 			trunc = trunc[:maxBytes]
 		}
 		for _, c := range trunc {
@@ -911,7 +921,7 @@ func (t *tracer) printBytes(b []byte) {
 		}
 	}
 	t.printf("\"")
-	if len(b) > maxBytes {
+	if maxBytes > 0 && len(b) > maxBytes {
 		t.printf("...")
 	}
 	t.printf(")")

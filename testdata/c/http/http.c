@@ -44,7 +44,10 @@ int request(uint8_t method_tag, uint8_t scheme_tag, const char * authority_str, 
             .len = strlen(body),
         };
         uint64_t ret_val;
-        streams_write(ret, &buf, &ret_val, NULL);
+        if (!streams_write(ret, &buf, &ret_val, NULL)) {
+            printf("Error writing stream\n");
+            return 8;
+        }
     }
 
     res = default_outgoing_http_handle(req, NULL);
@@ -98,7 +101,11 @@ int request(uint8_t method_tag, uint8_t scheme_tag, const char * authority_str, 
         printf("BODY read is error!\n");
         return 6;
     }
-    printf("data from read: %s\n", body_res.f0.ptr);
+    if (body_res.f0.len != strlen("Response")) {
+        printf("Unexpected body length: %zu\n", body_res.f0.len);
+        return 9;
+    }
+    printf("data from read: %.*s\n", (int) body_res.f0.ptr, body_res.f0.ptr);
     streams_tuple2_list_u8_bool_free(&body_res);
 
 
@@ -110,8 +117,13 @@ int request(uint8_t method_tag, uint8_t scheme_tag, const char * authority_str, 
 }
 
 int main() {
-    request(TYPES_METHOD_GET, TYPES_SCHEME_HTTP, "localhost:8080", "/get", "?some=arg&goes=here", NULL);
-//    request(TYPES_METHOD_POST, TYPES_SCHEME_HTTPS, "postman-echo.com", "/post", "", "{\"foo\": \"bar\"}");
-//    request(TYPES_METHOD_PUT, TYPES_SCHEME_HTTP, "postman-echo.com", "/put", "", NULL);
+    int r = request(TYPES_METHOD_GET, TYPES_SCHEME_HTTP, "localhost:8080", "/get", "?some=arg&goes=here", NULL);
+    if (r != 0) {
+        return r;
+    }
+    r = request(TYPES_METHOD_POST, TYPES_SCHEME_HTTP, "localhost:8080", "/post", "", "{\"foo\": \"bar\"}");
+    if (r != 0) {
+        return r;
+    }
     return 0;
 }

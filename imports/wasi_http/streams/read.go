@@ -10,16 +10,16 @@ import (
 )
 
 func streamReadFn(ctx context.Context, mod api.Module, stream_handle uint32, length uint64, out_ptr uint32) {
-	data := make([]byte, length)
-	_, _, err := Streams.Read(stream_handle, data)
+	rawData := make([]byte, length)
+	n, done, err := Streams.Read(stream_handle, rawData)
 
 	//	data, err := types.ResponseBody()
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	ptr_len := uint32(len(data)) + 1
-	data = append(data, 0)
+	data := rawData[0:n]
+	ptr_len := uint32(len(data))
 	ptr, err := common.Malloc(ctx, mod, ptr_len)
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -32,8 +32,12 @@ func streamReadFn(ctx context.Context, mod api.Module, stream_handle uint32, len
 	data = le.AppendUint32(data, 0)
 	data = le.AppendUint32(data, ptr)
 	data = le.AppendUint32(data, ptr_len)
-	// No more data to read.
-	data = le.AppendUint32(data, 0)
+	if done {
+		// No more data to read.
+		data = le.AppendUint32(data, 0)
+	} else {
+		data = le.AppendUint32(data, 1)
+	}
 	mod.Memory().Write(out_ptr, data)
 }
 

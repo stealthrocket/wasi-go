@@ -53,7 +53,7 @@ OPTIONS:
 
    --sockets <NAME>
       Enable a sockets extension, either {none, auto, path_open,
-      wasmedgev1, wasmedgev2}
+      wasmedgev1, wasmedgev2, wasix}
 
    --pprof-addr <ADDR:PORT>
       Start a pprof server listening on the specified address

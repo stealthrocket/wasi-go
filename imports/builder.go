@@ -167,6 +167,7 @@ func (b *Builder) WithRaise(fn func(context.Context, int) error) *Builder {
 // - none: disable sockets extensions (use vanilla WASI preview 1)
 // - wasmedgev1: use WasmEdge sockets extension version 1
 // - wasmedgev2: use WasmEdge sockets extension version 2
+// - wasix: use the WASIX sockets extension
 // - path_open: use the extension to the path_open system call (unix.PathOpenSockets)
 // - auto: attempt to detect one of the extensions above
 func (b *Builder) WithSocketsExtension(name string, module wazero.CompiledModule) *Builder {
@@ -177,6 +178,8 @@ func (b *Builder) WithSocketsExtension(name string, module wazero.CompiledModule
 		b.socketsExtension = &wasi_snapshot_preview1.WasmEdgeV1
 	case "wasmedgev2":
 		b.socketsExtension = &wasi_snapshot_preview1.WasmEdgeV2
+	case "wasix":
+		b.socketsExtension = &wasi_snapshot_preview1.Wasix
 	case "path_open":
 		b.socketsExtension = nil
 		b.pathOpenSockets = true
